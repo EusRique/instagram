@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongodb = require('mongodb');
+var obejctId = require('mongodb').ObjectId;
 
 var app = express();
 
@@ -47,6 +48,21 @@ app.get('/api', function(req, res) {
                     res.json(results);
                 }
                 mongoclient.close();             
+            });
+        });
+    });
+});
+
+app.get('/api/:id', function(req, res) {
+    db.open(function(error, mongoclient) {
+        mongoclient.collection('postagens', function(error, collection) {
+            collection.find(obejctId(req.params.id)).toArray(function(error, results) {
+                if (error) {
+                    res.json(error);
+                } else {
+                    res.json(results);
+                }
+                mongoclient.close();
             });
         });
     });
