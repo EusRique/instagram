@@ -67,3 +67,23 @@ app.get('/api/:id', function(req, res) {
         });
     });
 });
+
+app.put('/api/:id', function(req, res) {
+    db.open(function(error, mongoclient) {
+        mongoclient.collection('postagens', function(error, collection) {
+            collection.update(
+                { _id : obejctId(req.params.id)}, //query de pesquisa
+                { $set : {titulo: req.body.titulo}}, //instrução de atualiazação do(s) doc(s)
+                { }, //Mute identifica se devemos atualizar um unico parametro ou todos
+                function(error, records) {
+                    if (error) {
+                        res.json(error)
+                    } else {
+                        res.json({'sucesso' : 'Uhuul post atualizado com sucesso!!!'});
+                    }
+                    mongoclient.close();
+                }
+            );
+        });
+    });
+});
