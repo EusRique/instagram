@@ -87,3 +87,18 @@ app.put('/api/:id', function(req, res) {
         });
     });
 });
+
+app.delete('/api/:id', function(req, res) {
+    db.open(function(error, mongoclient) {
+        mongoclient.collection('postagens', function(error, collection) {
+            collection.remove({ _id : obejctId(req.params.id )}, function(error, records) {
+                if (error) {
+                    res.json(error);
+                } else {
+                    res.json({'sucesso' : 'Post removido com sucesso!!!'})
+                }
+                mongoclient.close();
+            });
+        });
+    });
+});
