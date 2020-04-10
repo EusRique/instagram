@@ -28,10 +28,25 @@ app.post('/api', function(req, res) {
                 if (error) {
                     res.json({'error' : 'Ops, algo deu errado!!!'});
                 } else {
-                    res.json('success' : 'Uhuull foto enviada com sucesso!!!');
+                    res.json({'success' : 'Uhuull foto enviada com sucesso!!!'});
                 }
 
                 mongoclient.close();
+            });
+        });
+    });
+});
+
+app.get('/api', function(req, res) {
+    db.open(function(error, mongoclient) {
+        mongoclient.collection('postagens', function(error, collection) {
+            collection.find().toArray(function(error, results) {
+                if (error) {
+                    res.json(error);
+                } else {
+                    res.json(results);
+                }
+                mongoclient.close();             
             });
         });
     });
