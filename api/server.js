@@ -2,11 +2,14 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var mongodb = require('mongodb');
 var obejctId = require('mongodb').ObjectId;
+var multiparty = require('connect-multiparty');
+var fs = require('fs');
 
 var app = express();
 
 app.use(bodyParser.urlencoded({ extended : true }));
 app.use(bodyParser.json());
+app.use(multiparty());
 
 var port = 3000;
 
@@ -21,18 +24,40 @@ db = new mongodb.Db(
 console.log('Executando servidor HTTP!!!');
 
 app.post('/api', function(req, res) {
-    var dados = req.body;
 
-    db.open(function(error, mongoclient) {
-        mongoclient.collection('postagens', function(error, collection) {
-            collection.insert(dados, function(error, records) {
-                if (error) {
-                    res.json({'error' : 'Ops, algo deu errado!!!'});
-                } else {
-                    res.json({'success' : 'Uhuull foto enviada com sucesso!!!'});
-                }
+    res.setHeader("Access-Control-Allow-Origin", "*");
 
-                mongoclient.close();
+    var date = new Date();
+    time_stamp = date.getTime();
+
+    var url_imagem = time_stamp + '_' + req.files.arquivo.originalFilename;
+
+    var path_origem = req.files.arquivo.path;
+    var path_destino = './uploads/' + url_imagem;
+
+    fs.rename(path_origem, path_destino, function(err) {
+        if (err) {
+            res.status(500).json({error: err});
+
+            return;
+        }
+
+        var dados = {
+            url_imagem: url_imagem,
+            titulo: req.body.titulo
+        }
+
+        db.open(function(error, mongoclient) {
+            mongoclient.collection('postagens', function(error, collection) {
+                collection.insert(dados, function(error, records) {
+                    if (error) {
+                        res.json({'error' : 'Ops, algo deu errado!!!'});
+                    } else {
+                        res.json({'success' : 'Uhuull foto enviada com sucesso!!!'});
+                    }
+    
+                    mongoclient.close();
+                });
             });
         });
     });
@@ -43,7 +68,7 @@ app.get('/api', function(req, res) {
         mongoclient.collection('postagens', function(error, collection) {
             collection.find().toArray(function(error, results) {
                 if (error) {
-                    res.json(error);
+                    res.json({'error' : 'Ops, algo deu errado!!!'});
                 } else {
                     res.json(results);
                 }
@@ -58,7 +83,7 @@ app.get('/api/:id', function(req, res) {
         mongoclient.collection('postagens', function(error, collection) {
             collection.find(obejctId(req.params.id)).toArray(function(error, results) {
                 if (error) {
-                    res.json(error);
+                    res.json({'error' : 'Ops, algo deu errado!!!'});
                 } else {
                     res.json(results);
                 }
@@ -77,7 +102,7 @@ app.put('/api/:id', function(req, res) {
                 { }, //Mute identifica se devemos atualizar um unico parametro ou todos
                 function(error, records) {
                     if (error) {
-                        res.json(error)
+                        res.json({'error' : 'Ops, algo deu errado!!!'})
                     } else {
                         res.json({'sucesso' : 'Uhuul post atualizado com sucesso!!!'});
                     }
@@ -93,7 +118,7 @@ app.delete('/api/:id', function(req, res) {
         mongoclient.collection('postagens', function(error, collection) {
             collection.remove({ _id : obejctId(req.params.id )}, function(error, records) {
                 if (error) {
-                    res.json(error);
+                    res.json({'error' : 'Ops, algo deu errado!!!'});
                 } else {
                     res.json({'sucesso' : 'Post removido com sucesso!!!'})
                 }
